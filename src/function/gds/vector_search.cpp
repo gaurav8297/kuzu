@@ -30,6 +30,7 @@ namespace kuzu {
         enum class SearchType {
             NAIVE,
             BLIND,
+            RANDOM,
             DIRECTED,
             ADAPTIVE_G,
             ADAPTIVE_L,
@@ -150,6 +151,7 @@ namespace kuzu {
             NumericMetric* oneHopCalls;
             NumericMetric* twoHopCalls;
             NumericMetric* dynamicTwoHopCalls;
+            NumericMetric* candidateNodesExplored;
 
             explicit VectorSearchStats(ExecutionContext *context) {
                 vectorSearchTimeMetric = context->profiler->registerTimeMetricForce("vectorSearchTime");
@@ -160,6 +162,7 @@ namespace kuzu {
                 oneHopCalls = context->profiler->registerNumericMetricForce("oneHopCalls");
                 twoHopCalls = context->profiler->registerNumericMetricForce("twoHopCalls");
                 dynamicTwoHopCalls = context->profiler->registerNumericMetricForce("dynamicTwoHopCalls");
+                candidateNodesExplored = context->profiler->registerNumericMetricForce("candidateNodesExplored");
             }
         };
 
@@ -228,6 +231,8 @@ namespace kuzu {
                     searchType = SearchType::NAIVE;
                 } else if (searchTypeStr == "blind") {
                     searchType = SearchType::BLIND;
+                } else if (searchTypeStr == "random") {
+                    searchType = SearchType::RANDOM;
                 } else if (searchTypeStr == "directed") {
                     searchType = SearchType::DIRECTED;
                 } else if (searchTypeStr == "adaptive_g") {
@@ -347,6 +352,7 @@ namespace kuzu {
                     BinaryHeap<NodeDistFarther> &results,
                     const int efSearch,
                     VectorSearchStats &stats) {
+                stats.candidateNodesExplored->increase(size);
                 int i = 0;
                 constexpr int batch_size = 4;
                 std::array<double, batch_size> dists;
@@ -434,6 +440,7 @@ namespace kuzu {
                     BinaryHeap<NodeDistFarther> &results,
                     const int efSearch,
                     VectorSearchStats &stats) {
+                stats.candidateNodesExplored->increase(size);
                 int i = 0;
                 constexpr int batch_size = 4;
                 std::array<double, batch_size> dists;
@@ -486,12 +493,14 @@ namespace kuzu {
                 }
             }
 
-            inline void blindTwoHopSearch(std::vector<common::nodeID_t> &firstHopNbrs,
+            inline void blindTwoHopSearch(ValueVector* firstHopNbrs,
                                            Graph *graph, NodeOffsetLevelSemiMask *filterMask, GraphScanState &state,
                                            int filterNbrsToFind, BitVectorVisitedTable *visited, vector_array_t &vectorArray,
                                            int &size, VectorSearchStats &stats) {
+                auto totalNbrs = firstHopNbrs->state->getSelVector().getSelSize();
                 // First hop neighbours
-                for (auto &neighbor: firstHopNbrs) {
+                for (size_t i = 0; i < totalNbrs; i++) {
+                    auto neighbor = firstHopNbrs->getValue<nodeID_t>(i);
                     auto isNeighborMasked = filterMask->isMasked(neighbor.offset);
                     if (visited->is_bit_set(neighbor.offset)) {
                         continue;
@@ -506,26 +515,24 @@ namespace kuzu {
                     }
 
                     stats.listNbrsCallTime->start();
-                    auto secondHopNbrs = graph->scanFwdRandom(neighbor, state);
+                    auto secondHopNbrs = graph->scanFwdRandomFast2(neighbor, state);
                     stats.listNbrsCallTime->stop();
                     stats.listNbrsMetric->increase(1);
 
+                    auto secondHopNbrsSize = secondHopNbrs->state->getSelVector().getSelSize();
                     // Try prefetching
-                    for (auto &secondHopNeighbor: secondHopNbrs) {
+                    for (int i = 0; i < secondHopNbrsSize; i++) {
+                        auto secondHopNeighbor = secondHopNbrs->getValue<nodeID_t>(i);
                         visited->prefetch(secondHopNeighbor.offset);
                         filterMask->prefetchMaskValue(secondHopNeighbor.offset);
                     }
-
-                    for (auto &secondHopNeighbor: secondHopNbrs) {
+                    for (int i = 0; i < secondHopNbrsSize; i++) {
+                        auto secondHopNeighbor = secondHopNbrs->getValue<nodeID_t>(i);
                         auto isNeighborMasked = filterMask->isMasked(secondHopNeighbor.offset);
-//                        if (isNeighborMasked) {
-//                            visitedSet.insert(secondHopNeighbor.offset);
-//                        }
                         if (visited->is_bit_set(secondHopNeighbor.offset)) {
                             continue;
                         }
                         if (isNeighborMasked) {
-                            // TODO: Maybe there's some benefit in doing batch distance computation
                             visited->set_bit(secondHopNeighbor.offset);
                             vectorArray[size++] = secondHopNeighbor.offset;
                             if (size >= filterNbrsToFind) {
@@ -542,14 +549,14 @@ namespace kuzu {
                                      VectorSearchStats &stats) {
                 auto totalNbrs = firstHopNbrs->state->getSelVector().getSelSize();
                 std::queue<vector_id_t> nbrsToExplore;
-                int visitedSetSize = 0;
+                std::unordered_set<vector_id_t> visitedSet;
 
                 // First hop neighbours
                 for (int i = 0; i < totalNbrs; i++) {
                     auto neighbor = firstHopNbrs->getValue<nodeID_t>(i);
                     auto isNeighborMasked = filterMask->isMasked(neighbor.offset);
                     if (isNeighborMasked) {
-                        visitedSetSize++;
+                        visitedSet.insert(neighbor.offset);
                     }
                     if (visited->is_bit_set(neighbor.offset)) {
                         continue;
@@ -564,7 +571,7 @@ namespace kuzu {
                 while (!nbrsToExplore.empty()) {
                     auto neighbor = nbrsToExplore.front();
                     nbrsToExplore.pop();
-                    if (visitedSetSize >= filterNbrsToFind) {
+                    if (visitedSet.size() >= filterNbrsToFind) {
                         break;
                     }
                     if (visited->is_bit_set(neighbor)) {
@@ -589,13 +596,12 @@ namespace kuzu {
                         auto secondHopNeighbor = secondHopNbrs->getValue<nodeID_t>(i);
                         auto isNeighborMasked = filterMask->isMasked(secondHopNeighbor.offset);
                         if (isNeighborMasked) {
-                            visitedSetSize++;
+                            visitedSet.insert(secondHopNeighbor.offset);
                         }
                         if (visited->is_bit_set(secondHopNeighbor.offset)) {
                             continue;
                         }
                         if (isNeighborMasked) {
-                            // TODO: Maybe there's some benefit in doing batch distance computation
                             visited->set_bit(secondHopNeighbor.offset);
                             vectorArray[size++] = secondHopNeighbor.offset;
                         }
@@ -735,6 +741,7 @@ namespace kuzu {
                     }
                     if (isNeighborMasked) {
                         visited->set_bit(neighbor.offset);
+                        stats.candidateNodesExplored->increase(1);
                     }
                     vectorArray[size++] = neighbor.offset;
                 }
@@ -801,6 +808,7 @@ namespace kuzu {
                         visited->set_bit(i);
                         nbrsAdded++;
                         stats.distCompMetric->increase(1);
+                        stats.candidateNodesExplored->increase(1);
                     }
                     if (nbrsAdded >= maxNodesToAdd) {
                         break;
@@ -925,18 +933,67 @@ namespace kuzu {
 
                     // Get the first hop neighbours
                     stats.listNbrsCallTime->start();
-                    auto firstHopNbrs = graph->scanFwdRandom({candidate.id, tableId}, state);
+                    auto firstHopNbrs = graph->scanFwdRandomFast({candidate.id, tableId}, state);
                     stats.listNbrsCallTime->stop();
                     stats.listNbrsMetric->increase(1);
 
+                    auto totalNbrs = firstHopNbrs->state->getSelVector().getSelSize();
+
                     // Try prefetching
-                    for (auto &neighbor: firstHopNbrs) {
+                    for (int i = 0; i < totalNbrs; i++) {
+                        auto neighbor = firstHopNbrs->getValue<nodeID_t>(i);
                         visited->prefetch(neighbor.offset);
                         filterMask->prefetchMaskValue(neighbor.offset);
                     }
 
                     blindTwoHopSearch(firstHopNbrs, graph, filterMask, state, 64, visited, vectorArray, size,
                                      stats);
+                    stats.twoHopCalls->increase(1);
+                    batchComputeDistance(vectorArray, size, dc, candidates, results, efSearch, stats);
+                }
+            }
+
+            template<typename T>
+            void randomFilteredSearch(const table_id_t tableId, Graph *graph,
+                                     NodeTableDistanceComputer<T> *dc, NodeOffsetLevelSemiMask *filterMask,
+                                     GraphScanState &state, const vector_id_t entrypoint, const double entrypointDist,
+                                     BinaryHeap<NodeDistFarther> &results, BitVectorVisitedTable *visited,
+                                     const int efSearch, const int numFilteredNodesToAdd, VectorSearchStats &stats) {
+                vector_array_t vectorArray;
+                int size = 0;
+                std::priority_queue<NodeDistFarther> candidates;
+                candidates.emplace(entrypoint, entrypointDist);
+                if (filterMask->isMasked(entrypoint)) {
+                    results.push(NodeDistFarther(entrypoint, entrypointDist));
+                }
+                visited->set_bit(entrypoint);
+
+                // Handle for neg correlation cases
+                addFilteredNodesToCandidates(dc, candidates, results, visited, filterMask, numFilteredNodesToAdd, stats);
+                while (!candidates.empty()) {
+                    auto candidate = candidates.top();
+                    if (candidate.dist > results.top()->dist && results.size() > 0) {
+                        break;
+                    }
+                    candidates.pop();
+
+                    // Get the first hop neighbours
+                    stats.listNbrsCallTime->start();
+                    auto firstHopNbrs = graph->scanFwdRandomFast({candidate.id, tableId}, state);
+                    stats.listNbrsCallTime->stop();
+                    stats.listNbrsMetric->increase(1);
+
+                    auto totalNbrs = firstHopNbrs->state->getSelVector().getSelSize();
+
+                    // Try prefetching
+                    for (int i = 0; i < totalNbrs; i++) {
+                        auto neighbor = firstHopNbrs->getValue<nodeID_t>(i);
+                        visited->prefetch(neighbor.offset);
+                        filterMask->prefetchMaskValue(neighbor.offset);
+                    }
+
+                    randomTwoHopSearch(firstHopNbrs, tableId, graph, filterMask, state, totalNbrs, visited, vectorArray, size,
+                                      stats);
                     stats.twoHopCalls->increase(1);
                     batchComputeDistance(vectorArray, size, dc, candidates, results, efSearch, stats);
                 }
@@ -1032,7 +1089,7 @@ namespace kuzu {
                         filterMask->prefetchMaskValue(neighbor.offset);
                     }
 
-                    if (selectivity >= 0.5) {
+                    if (selectivity >= 0.4) {
                         // If the selectivity is high, we will simply do one hop search since we can find the next
                         // closest directly from candidates priority queue.
                         oneHopSearch(firstHopNbrs, filterMask, visited, vectorArray, size);
@@ -1047,12 +1104,7 @@ namespace kuzu {
                     } else {
                         // If the selectivity is low, we will not do dynamic two hop search since it does some extra
                         // distance computations to reduce listNbrs call which are redundant.
-                        std::vector<common::nodeID_t> firstHopNbrsVec;
-                        for (int i = 0; i < totalNbrs; i++) {
-                            auto neighbor = firstHopNbrs->getValue<nodeID_t>(i);
-                            firstHopNbrsVec.push_back(neighbor);
-                        }
-                        blindTwoHopSearch(firstHopNbrsVec, graph, filterMask, state, 64, visited, vectorArray, size,
+                        blindTwoHopSearch(firstHopNbrs, graph, filterMask, state, 64, visited, vectorArray, size,
                                           stats);
                         stats.twoHopCalls->increase(1);
                     }
@@ -1114,7 +1166,7 @@ namespace kuzu {
                     // Multiply by 0.6 due to the overlapping factor
                     auto estimatedFullTwoHopDistanceComp = (totalNbrs * filteredNbrs + filteredNbrs) * 0.4;
                     auto estimatedDirectedDistanceComp = totalNbrs + (totalNbrs - filteredNbrs);
-                    if (enableHighSelectivityOpt && localSelectivity >= 0.5) {
+                    if (enableHighSelectivityOpt && localSelectivity >= 0.4) {
                         // If the selectivity is high, we will simply do one hop search since we can find the next
                         // closest directly from candidates priority queue.
                         oneHopSearch(firstHopNbrs, filterMask, visited, vectorArray, size);
@@ -1172,9 +1224,12 @@ namespace kuzu {
                     } else if (searchType == SearchType::BLIND) {
                         blindFilteredSearch(nodeTableId, graph, dc, filterMask, state, entrypoint, entrypointDist,
                                         results, visited, efSearch, maxK, stats);
+                    } else if (searchType == SearchType::RANDOM) {
+                        randomFilteredSearch(nodeTableId, graph, dc, filterMask, state, entrypoint, entrypointDist,
+                                             results, visited, efSearch, maxK, stats);
                     } else if (searchType == SearchType::DIRECTED) {
                         directedFilteredSearch(nodeTableId, graph, dc, filterMask, state, entrypoint, entrypointDist,
-                                            results, visited, efSearch, maxK, stats);
+                                               results, visited, efSearch, maxK, stats);
                     } else if (searchType == SearchType::ONE_HOP) {
                         oneHopFilteredSearch(nodeTableId, graph, dc, filterMask, state, entrypoint, entrypointDist,
                                                results, visited, efSearch, maxK, stats);
