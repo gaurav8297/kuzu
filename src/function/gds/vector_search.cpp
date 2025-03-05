@@ -1351,7 +1351,7 @@ namespace kuzu {
                 qdc->setQuery(query);
 
                 std::priority_queue<NodeDistFarther> reversed;
-                if (bindState->useKnnSearch) {
+                if (bindState->useKnnSearch or (filterMask->isEnabled() && filterMask->getNumMaskedNodes() <= 30000)) {
                     BinaryHeap<NodeDistFarther> results(k);
                     if (filterMask->isEnabled()) {
                         if (useQuantizedVectors) {
