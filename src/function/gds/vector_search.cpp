@@ -183,8 +183,7 @@ namespace kuzu {
              */
             std::vector<common::LogicalTypeID> getParameterTypeIDs() const override {
                 return {LogicalTypeID::ANY, LogicalTypeID::NODE, LogicalTypeID::INT64, LogicalTypeID::LIST,
-                        LogicalTypeID::INT64, LogicalTypeID::INT64, LogicalTypeID::INT64, LogicalTypeID::BOOL,
-                        LogicalTypeID::BOOL, LogicalTypeID::STRING};
+                        LogicalTypeID::INT64, LogicalTypeID::INT64, LogicalTypeID::BOOL};
             }
 
             /*
@@ -219,37 +218,37 @@ namespace kuzu {
                 }
                 auto k = ExpressionUtil::getLiteralValue<int64_t>(*params[4]);
                 auto efSearch = ExpressionUtil::getLiteralValue<int64_t>(*params[5]);
-                auto maxK = ExpressionUtil::getLiteralValue<int64_t>(*params[6]);
-                auto useQuantizedVectors = ExpressionUtil::getLiteralValue<bool>(*params[7]);
-                auto useKnnSearch = ExpressionUtil::getLiteralValue<bool>(*params[8]);
-                auto searchTypeStr = params[9]->toString();
+//                auto maxK = ExpressionUtil::getLiteralValue<int64_t>(*params[6]);
+//                auto useQuantizedVectors = ExpressionUtil::getLiteralValue<bool>(*params[6]);
+                auto useKnnSearch = ExpressionUtil::getLiteralValue<bool>(*params[6]);
+//                auto searchTypeStr = params[9]->toString();
                 // lower case
-                std::transform(searchTypeStr.begin(), searchTypeStr.end(), searchTypeStr.begin(), ::tolower);
+//                std::transform(searchTypeStr.begin(), searchTypeStr.end(), searchTypeStr.begin(), ::tolower);
 
-                SearchType searchType;
-                if (searchTypeStr == "naive") {
-                    searchType = SearchType::NAIVE;
-                } else if (searchTypeStr == "blind") {
-                    searchType = SearchType::BLIND;
-                } else if (searchTypeStr == "random") {
-                    searchType = SearchType::RANDOM;
-                } else if (searchTypeStr == "directed") {
-                    searchType = SearchType::DIRECTED;
-                } else if (searchTypeStr == "adaptive_g") {
-                    searchType = SearchType::ADAPTIVE_G;
-                } else if (searchTypeStr == "adaptive_l") {
-                    searchType = SearchType::ADAPTIVE_L;
-                } else if (searchTypeStr == "navix") {
-                    searchType = SearchType::NAVIX;
-                } else if (searchTypeStr == "one_hop") {
-                    searchType = SearchType::ONE_HOP;
-                } else {
-                    throw BinderException("Invalid search type: " + searchTypeStr);
-                }
+//                SearchType searchType;
+//                if (searchTypeStr == "naive") {
+//                    searchType = SearchType::NAIVE;
+//                } else if (searchTypeStr == "blind") {
+//                    searchType = SearchType::BLIND;
+//                } else if (searchTypeStr == "random") {
+//                    searchType = SearchType::RANDOM;
+//                } else if (searchTypeStr == "directed") {
+//                    searchType = SearchType::DIRECTED;
+//                } else if (searchTypeStr == "adaptive_g") {
+//                    searchType = SearchType::ADAPTIVE_G;
+//                } else if (searchTypeStr == "adaptive_l") {
+//                    searchType = SearchType::ADAPTIVE_L;
+//                } else if (searchTypeStr == "navix") {
+//                    searchType = SearchType::NAVIX;
+//                } else if (searchTypeStr == "one_hop") {
+//                    searchType = SearchType::ONE_HOP;
+//                } else {
+//                    throw BinderException("Invalid search type: " + searchTypeStr);
+//                }
 
                 bindData = std::make_unique<VectorSearchBindData>(nodeInput, nodeOutput, nodeTableId,
-                                                                  embeddingPropertyId, k, efSearch, maxK,
-                                                                  useQuantizedVectors, useKnnSearch, searchType,
+                                                                  embeddingPropertyId, k, efSearch, 5,
+                                                                  false, useKnnSearch, SearchType::NAVIX,
                                                                   queryVector, false);
             }
 
