@@ -27,10 +27,10 @@ struct VectorIndexConfig {
     constexpr static const char* DISTANCE_FUNC = "DISTANCEFUNC";
 
     // The maximum number of neighbors to keep for each node at the upper level
-    int maxNbrsAtUpperLevel = 64;
+    int maxNbrsAtUpperLevel = 32;
 
     // The maximum number of neighbors to keep for each node at the lower level
-    int maxNbrsAtLowerLevel = 128;
+    int maxNbrsAtLowerLevel = 64;
 
     // Sampling probability for the upper level
     float samplingProbability = 0.05;
@@ -44,8 +44,8 @@ struct VectorIndexConfig {
     // The alpha parameter for the RNG heuristic
     float alpha = 1.0;
 
-    // The number of node groups per partition (default to 5M)
-    int numberVectorsPerPartition = 5000000;
+    // The number of node groups per partition (default to 50M)
+    int numberVectorsPerPartition = 50000000;
 
     // Whether scalar quantization is enabled
     bool sqEnabled = true;
