@@ -1116,8 +1116,7 @@ namespace kuzu {
                                 NodeTableDistanceComputer<T> *dc, NodeOffsetLevelSemiMask *filterMask,
                                 GraphScanState &state, const vector_id_t entrypoint, const double entrypointDist,
                                 BinaryHeap<NodeDistFarther> &results, BitVectorVisitedTable *visited,
-                                const int efSearch, const int numFilteredNodesToAdd, VectorSearchStats &stats,
-                                bool enableHighSelectivityOpt) {
+                                const int efSearch, const int numFilteredNodesToAdd, VectorSearchStats &stats) {
                 vector_array_t vectorArray;
                 int size = 0;
                 std::priority_queue<NodeDistFarther> candidates;
@@ -1165,7 +1164,7 @@ namespace kuzu {
                     // Multiply by 0.6 due to the overlapping factor
                     auto estimatedFullTwoHopDistanceComp = (totalNbrs * filteredNbrs + filteredNbrs) * 0.4;
                     auto estimatedDirectedDistanceComp = totalNbrs + (totalNbrs - filteredNbrs);
-                    if (enableHighSelectivityOpt && localSelectivity >= 0.4) {
+                    if (localSelectivity >= 0.4) {
                         // If the selectivity is high, we will simply do one hop search since we can find the next
                         // closest directly from candidates priority queue.
                         oneHopSearch(firstHopNbrs, filterMask, visited, vectorArray, size);
@@ -1208,11 +1207,11 @@ namespace kuzu {
                     if (searchType == SearchType::NAVIX) {
                         navixFilteredSearch(nodeTableId, graph, dc,
                                             filterMask, state, entrypoint, entrypointDist, results,
-                                            visited, efSearch, maxK, stats, true);
+                                            visited, efSearch, maxK, stats);
                     } else if (searchType == SearchType::ADAPTIVE_L) {
                         navixFilteredSearch(nodeTableId, graph, dc,
                                             filterMask, state, entrypoint, entrypointDist, results,
-                                            visited, efSearch, maxK, stats, false);
+                                            visited, efSearch, maxK, stats);
                     } else if (searchType == SearchType::ADAPTIVE_G) {
                         adaptiveGlobalFilteredSearch(selectivity, nodeTableId, graph, dc,
                                                     filterMask, state, entrypoint, entrypointDist, results,
