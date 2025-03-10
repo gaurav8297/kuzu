@@ -81,7 +81,7 @@ $ make release NUM_THREADS=32
 
 Kuzu support multiple ways to ingest data into the database. Take a look at the [Import Data](https://docs.kuzudb.com/import/) for more information.
 <br>
-For this example, we will import the SIFT10K using the parquet file format.
+For this example, we will import the SIFT1M using the parquet file format.
 <br>
 ```bash
 # Download Sift 1M Data
