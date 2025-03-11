@@ -114,11 +114,6 @@ CALL ANN_SEARCH(c.<embedding_property>, [0.1, ...], <K>, <efS>, <bool_enable_bru
 RETURN c.<embedding_property>;
 ```
 
-_Note: For the ease of implementation and quick experimentation, we haven't implemented the PROJECT GRAPH cypher 
-syntax here as it's just a better syntax and doesn't change the functionality of the system. 
-It'll be implemented in kuzu master branch soon https://github.com/kuzudb/kuzu._
-
-
 Now coming back to our sift dataset, let's query the data:
 ```bash
 # Simple vector search query
