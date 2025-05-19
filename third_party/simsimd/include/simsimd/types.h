@@ -345,13 +345,13 @@ typedef unsigned short simsimd_f16_t;
 #if (defined(__GNUC__) || defined(__clang__)) && (defined(__ARM_ARCH) || defined(__aarch64__)) && \
     (defined(__ARM_BF16_FORMAT_ALTERNATIVE))
 #undef SIMSIMD_NATIVE_BF16
-#define SIMSIMD_NATIVE_BF16 1
-typedef __bf16 simsimd_bf16_t;
+#define SIMSIMD_NATIVE_BF16 0
+typedef unsigned short simsimd_bf16_t;
 #elif ((defined(__GNUC__) || defined(__clang__)) && (defined(__x86_64__) || defined(__i386__)) && \
        (defined(__AVX512BF16__)))
-typedef __bfloat16 simsimd_bf16_t;
+typedef unsigned short simsimd_bf16_t;
 #undef SIMSIMD_NATIVE_BF16
-#define SIMSIMD_NATIVE_BF16 1
+#define SIMSIMD_NATIVE_BF16 0
 #else                                       // Unknown compiler or architecture
 #if defined(__GNUC__) || defined(__clang__) // Some compilers don't support warning pragmas
 #warning "Unknown compiler or architecture for bfloat16."

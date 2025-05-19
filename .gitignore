@@ -65,3 +65,4 @@ scripts/generate-cpp-docs/c/docs
 dataset/binary-demo
 dataset/databases/tinysnb
 dataset/complex-vector-index
+cmake-build*
