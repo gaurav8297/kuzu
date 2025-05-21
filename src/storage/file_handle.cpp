@@ -26,7 +26,12 @@ void FileHandle::constructExistingFileHandle(const std::string& path, VirtualFil
     main::ClientContext* context) {
     int openFlags;
     if (isReadOnlyFile()) {
+        printf("open with O_DIRECT\n");
+#ifdef __linux__
+        openFlags = O_RDONLY | O_DIRECT;
+#else
         openFlags = O_RDONLY;
+#endif
     } else {
         openFlags = O_RDWR | ((createFileIfNotExists()) ? O_CREAT : 0x00000000);
     }
