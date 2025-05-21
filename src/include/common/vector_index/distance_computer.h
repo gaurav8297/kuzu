@@ -443,7 +443,7 @@ private:
         return reinterpret_cast<T*>(ListVector::getDataVector(resultVector)->getData());
     }
 
-private:
+public:
     main::ClientContext *context;
     offset_t startOffset;
     std::unique_ptr<DistanceComputer<T>> delegate;
@@ -454,6 +454,41 @@ private:
     std::unique_ptr<ValueVector> embeddingVector1;
     std::unique_ptr<ValueVector> embeddingVector2;
     std::unique_ptr<Column::FastLookupRequest> readRequest;
+};
+
+struct FastQnNodeTableDistanceComputer : NodeTableDistanceComputer<uint8_t> {
+    FastQnNodeTableDistanceComputer(main::ClientContext* context, table_id_t nodeTableId,
+        property_id_t embeddingPropertyId, offset_t startOffset, const uint8_t* quantizedVectors,
+        const int codeSize, std::unique_ptr<DistanceComputer<uint8_t>> delegate)
+        : NodeTableDistanceComputer(context, nodeTableId, embeddingPropertyId, startOffset,
+              std::move(delegate)),
+          quantizedVectors(quantizedVectors), codeSize(codeSize) {}
+
+    inline void computeDistance(vector_id_t id, double* result) {
+        auto vec = quantizedVectors + id * codeSize;
+        delegate->computeDistance(vec, result);
+    }
+
+    inline void computeDistance(vector_id_t src, vector_id_t dest, double* result) {
+        auto srcVec = quantizedVectors + src * codeSize;
+        auto destVec = quantizedVectors + dest * codeSize;
+        delegate->computeDistance(srcVec, destVec, result);
+    }
+
+    inline void batchComputeDistance(const vector_id_t* vecIds, const int numIds, double* results) {
+        KU_ASSERT(numIds <= common::FAST_LOOKUP_MAX_BATCH_SIZE && numIds >= 4);
+        for (int i = 0; i < numIds; i++) {
+            computeDistance(vecIds[i], results + i);
+        }
+    }
+
+    inline void setQuery(const float* query) {
+        delegate->setQuery(query);
+    }
+
+private:
+    const uint8_t* quantizedVectors;
+    const int codeSize;
 };
 
 static inline std::unique_ptr<NodeTableDistanceComputer<float>> createDistanceComputer(
@@ -474,6 +509,7 @@ static inline std::unique_ptr<NodeTableDistanceComputer<float>> createDistanceCo
 
 static inline std::unique_ptr<NodeTableDistanceComputer<uint8_t>> createQuantizedDistanceComputer(
         main::ClientContext *context, table_id_t nodeTableId, property_id_t quantizedEmbeddingPropertyId,
+        const uint8_t* quantizedVectors,
         offset_t startOffset,
         int dim, DistanceFunc distanceType, const SQ8Bit *quantizer, bool symmetric = false) {
     std::unique_ptr<DistanceComputer<uint8_t>> delegate;
@@ -501,9 +537,13 @@ static inline std::unique_ptr<NodeTableDistanceComputer<uint8_t>> createQuantize
         }
     }
 
-    return std::make_unique<NodeTableDistanceComputer<uint8_t>>(context, nodeTableId, quantizedEmbeddingPropertyId,
-                                                                startOffset,
-                                                                std::move(delegate));
+    // return std::make_unique<NodeTableDistanceComputer<uint8_t>>(context, nodeTableId, quantizedEmbeddingPropertyId,
+    //                                                             startOffset,
+    //                                                             std::move(delegate));
+
+    return std::make_unique<FastQnNodeTableDistanceComputer>(context, nodeTableId,
+        quantizedEmbeddingPropertyId, startOffset, quantizedVectors, quantizer->codeSize,
+        std::move(delegate));
 }
 
 } // namespace common

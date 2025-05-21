@@ -109,6 +109,12 @@ namespace kuzu {
                                 sharedState->startOffsetNodeTable;
                 // print some vector
                 localState->quantizer->encode(vectors, startVectorId, numVectors);
+
+                // Also store the quantized vectors in the header
+                auto quantizedVectors =
+                    sharedState->headerPerPartition->getQuantizedVectors() +
+                    startVectorId * sharedState->headerPerPartition->getQuantizer()->codeSize;
+                sharedState->headerPerPartition->getQuantizer()->encode(vectors, quantizedVectors, numVectors);
             }
             printf("Finished quantization %d!!\n", sharedState->partitionId);
         }
@@ -126,13 +132,13 @@ namespace kuzu {
                     *sharedState->partitionerSharedState->partitioningBuffers[0]);
 
 //             TODO: Fix this to make it parallel!!
-//            printf("Running quantization!!\n");
+           // printf("Running quantization!!\n");
             // Skip the quantization for now
-//            sharedState->headerPerPartition->getQuantizer()->batch_train(
-//                    sharedState->tempStorage->vectors, sharedState->tempStorage->numVectors);
-//            sharedState->headerPerPartition->getQuantizer()->encode(
-//                    sharedState->tempStorage->vectors, sharedState->headerPerPartition->getQuantizedVectors(),
-//                    sharedState->tempStorage->numVectors);
+           // sharedState->headerPerPartition->getQuantizer()->batchTrain(
+           //         sharedState->tempStorage->vectors, sharedState->tempStorage->numVectors);
+           // sharedState->headerPerPartition->getQuantizer()->encode(
+           //         sharedState->tempStorage->vectors, sharedState->headerPerPartition->getQuantizedVectors(),
+           //         sharedState->tempStorage->numVectors);
 
             // Flush quantized vectors
             // TODO: Make it parallel

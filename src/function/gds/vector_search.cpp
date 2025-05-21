@@ -105,7 +105,9 @@ namespace kuzu {
                 this->dc = createDistanceComputer(context, nodeTableId, embeddingPropertyId, startOffset,
                                                   indexHeader->getDim(), indexHeader->getConfig().distanceFunc);
                 this->qdc = createQuantizedDistanceComputer(context, nodeTableId,
-                                                            indexHeader->getCompressedPropertyId(), startOffset,
+                                                            indexHeader->getCompressedPropertyId(),
+                                                            partitionHeader->getQuantizedVectors(),
+                                                            startOffset,
                                                             indexHeader->getDim(),
                                                             indexHeader->getConfig().distanceFunc,
                                                             partitionHeader->getQuantizer(),
