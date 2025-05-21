@@ -30,7 +30,7 @@ void FileHandle::constructExistingFileHandle(const std::string& path, VirtualFil
     } else {
         openFlags = O_RDWR | ((createFileIfNotExists()) ? O_CREAT : 0x00000000);
 #ifdef __linux__
-        if (path.ends_with("data.kz")) {
+        if (path.ends_with("/data.kz")) {
             printf("open with O_DIRECT\n");
             openFlags |= O_DIRECT;
         }
