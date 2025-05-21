@@ -195,6 +195,7 @@ int main(int argc, char **argv) {
 
     auto systemConfig = SystemConfig();
     // systemConfig.readOnly = true;
+    printf("# Buffer manager size: %d GB\n", bufferManagerSize);
     systemConfig.bufferPoolSize = bufferManagerSize * 1024 * 1024 * 1024;  // Convert GB to bytes
     auto db = Database(databasePath, systemConfig);
     auto conn = Connection(&db);
