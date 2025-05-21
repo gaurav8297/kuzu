@@ -183,7 +183,7 @@ int main(int argc, char **argv) {
     }
 
     auto systemConfig = SystemConfig();
-    systemConfig.readOnly = true;
+    // systemConfig.readOnly = true;
     auto db = Database(databasePath, systemConfig);
     auto conn = Connection(&db);
     printf("# Max num threads: %d\n", maxNumThreads);

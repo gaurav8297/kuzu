@@ -26,17 +26,15 @@ void FileHandle::constructExistingFileHandle(const std::string& path, VirtualFil
     main::ClientContext* context) {
     int openFlags;
     if (isReadOnlyFile()) {
-        printf("open with O_DIRECT\n");
         openFlags = O_RDONLY;
-#ifdef __linux__
-        if (path.ends_with("data.kz")) {
-            openFlags |= O_DIRECT;
-        }
-#else
-        openFlags = O_RDONLY;
-#endif
     } else {
         openFlags = O_RDWR | ((createFileIfNotExists()) ? O_CREAT : 0x00000000);
+#ifdef __linux__
+        if (path.ends_with("data.kz")) {
+            printf("open with O_DIRECT\n");
+            openFlags |= O_DIRECT;
+        }
+=#endif
     }
     printf("Path: %s\n", path.c_str());
     fileInfo = vfs->openFile(path, openFlags, context);
