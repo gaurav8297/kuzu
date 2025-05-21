@@ -341,7 +341,7 @@ namespace kuzu {
                 }
             }
 
-            SQ8Bit(const SQ8Bit &other) : dim(other.dim), codeSize(dim + 4),
+            SQ8Bit(const SQ8Bit &other) : dim(other.dim), codeSize(other.dim + 4),
                                           breakPointDataRatio(other.breakPointDataRatio),
                                           numTrainedVecs(other.numTrainedVecs.load()), trainingFinished(other.trainingFinished) {
                 vmin = new float[dim];

@@ -27,8 +27,11 @@ void FileHandle::constructExistingFileHandle(const std::string& path, VirtualFil
     int openFlags;
     if (isReadOnlyFile()) {
         printf("open with O_DIRECT\n");
+        openFlags = O_RDONLY;
 #ifdef __linux__
-        openFlags = O_RDONLY | O_DIRECT;
+        if (path.ends_with("data.kz")) {
+            openFlags |= O_DIRECT;
+        }
 #else
         openFlags = O_RDONLY;
 #endif
