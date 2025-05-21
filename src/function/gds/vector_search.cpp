@@ -1372,7 +1372,11 @@ namespace kuzu {
                     if (useQuantizedVectors) {
                         search(searchType, header, nodeTableId, graph, qdc, filterMask, *state.get(), results, visited.get(),
                                efSearch, numFilteredNodesToAdd, stats);
+                        auto start = std::chrono::high_resolution_clock::now();
                         reverseAndRerankResults(results, reversed, dc, stats);
+                        auto end = std::chrono::high_resolution_clock::now();
+                        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+                        printf("Reranking time: %ld us\n", duration.count());
                     } else {
                         search(searchType, header, nodeTableId, graph, dc, filterMask, *state.get(), results, visited.get(),
                                efSearch, numFilteredNodesToAdd, stats);
