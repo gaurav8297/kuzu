@@ -139,8 +139,8 @@ namespace kuzu {
             std::vector<ValueVector *> vectors;
 
             VectorIndexHeader *indexHeader;
-            std::unique_ptr<NodeTableDistanceComputer<float>> dc;
-            std::unique_ptr<NodeTableDistanceComputer<uint8_t>> qdc;
+            std::unique_ptr<TableDistanceComputer<float>> dc;
+            std::unique_ptr<TableDistanceComputer<uint8_t>> qdc;
             node_group_idx_t totalNodeGroups;
         };
 
@@ -264,7 +264,7 @@ namespace kuzu {
             }
 
             template<typename T>
-            inline void searchNNOnUpperLevel(VectorIndexHeaderPerPartition *header, NodeTableDistanceComputer<T> *dc,
+            inline void searchNNOnUpperLevel(VectorIndexHeaderPerPartition *header, TableDistanceComputer<T> *dc,
                                              vector_id_t &nearest, double &nearestDist) {
                 while (true) {
                     vector_id_t prev_nearest = nearest;
@@ -290,7 +290,7 @@ namespace kuzu {
 
             template<typename T>
             inline void findEntrypointUsingUpperLayer(VectorIndexHeaderPerPartition *header,
-                                               NodeTableDistanceComputer<T> *dc, vector_id_t &entrypoint,
+                                               TableDistanceComputer<T> *dc, vector_id_t &entrypoint,
                                                double *entrypointDist) {
                 uint8_t entrypointLevel;
                 header->getEntrypoint(entrypoint, entrypointLevel);
@@ -309,7 +309,7 @@ namespace kuzu {
 
             inline void reverseAndRerankResults(BinaryHeap<NodeDistFarther> &results,
                                                 std::priority_queue<NodeDistFarther> &reversed,
-                                                NodeTableDistanceComputer<float> *dc, VectorSearchStats &stats) {
+                                                TableDistanceComputer<float> *dc, VectorSearchStats &stats) {
                 vector_array_t reranked;
                 constexpr int batch_size = 32;
                 std::array<double, batch_size> dists;
@@ -340,7 +340,7 @@ namespace kuzu {
 
             inline void reverseResults(BinaryHeap<NodeDistFarther> &results,
                                        std::priority_queue<NodeDistFarther> &reversed,
-                                       NodeTableDistanceComputer<float> *dc) {
+                                       TableDistanceComputer<float> *dc) {
                 while (results.size() > 0) {
                     auto res = results.popMin();
                     reversed.emplace(res.id, res.dist);
@@ -351,7 +351,7 @@ namespace kuzu {
             inline void batchComputeDistance(
                     vector_array_t &vectorArray,
                     int &size,
-                    NodeTableDistanceComputer<T> *dc,
+                    TableDistanceComputer<T> *dc,
                     std::priority_queue<NodeDistFarther> &candidates,
                     BinaryHeap<NodeDistFarther> &results,
                     const int efSearch,
@@ -391,7 +391,7 @@ namespace kuzu {
 
             template<typename T>
             inline void unfilteredSearch(const table_id_t tableId,
-                                  Graph *graph, NodeTableDistanceComputer<T> *dc,
+                                  Graph *graph, TableDistanceComputer<T> *dc,
                                   GraphScanState &state, const vector_id_t entrypoint, const double entrypointDist,
                                   BinaryHeap<NodeDistFarther> &results, BitVectorVisitedTable *visited,
                                   const int efSearch, VectorSearchStats &stats) {
@@ -439,7 +439,7 @@ namespace kuzu {
                     vector_array_t &vectorArray,
                     NodeOffsetLevelSemiMask *filterMask,
                     int &size,
-                    NodeTableDistanceComputer<T> *dc,
+                    TableDistanceComputer<T> *dc,
                     std::priority_queue<NodeDistFarther> &candidates,
                     BinaryHeap<NodeDistFarther> &results,
                     const int efSearch,
@@ -675,7 +675,7 @@ namespace kuzu {
             inline void batchDirectedComputeDistance(
                     vector_array_t &vectorArray,
                     int &size,
-                    NodeTableDistanceComputer<T> *dc,
+                    TableDistanceComputer<T> *dc,
                     NodeOffsetLevelSemiMask *filterMask,
                     std::priority_queue<NodeDistFarther> &candidates,
                     std::priority_queue<NodeDistFarther> &nbrsToExplore,
@@ -722,7 +722,7 @@ namespace kuzu {
             inline void directedTwoHopSearch(std::priority_queue<NodeDistFarther> &candidates, int filterNbrsToFind,
                                              ValueVector *firstHopNbrs, const table_id_t tableId,
                                              Graph *graph,
-                                             NodeTableDistanceComputer<T> *dc,
+                                             TableDistanceComputer<T> *dc,
                                              NodeOffsetLevelSemiMask *filterMask,
                                              GraphScanState &state,
                                              BinaryHeap<NodeDistFarther> &results, BitVectorVisitedTable *visited,
@@ -795,7 +795,7 @@ namespace kuzu {
             }
 
             template<typename T>
-            inline void addFilteredNodesToCandidates(NodeTableDistanceComputer<T> *dc,
+            inline void addFilteredNodesToCandidates(TableDistanceComputer<T> *dc,
                                                      std::priority_queue<NodeDistFarther> &candidates,
                                                      BinaryHeap<NodeDistFarther> &results,
                                                      BitVectorVisitedTable *visited,
@@ -822,7 +822,7 @@ namespace kuzu {
 
             template<typename T>
             inline void naiveFilteredSearch(const table_id_t tableId, NodeOffsetLevelSemiMask *filterMask,
-                                            Graph *graph, NodeTableDistanceComputer<T> *dc,
+                                            Graph *graph, TableDistanceComputer<T> *dc,
                                             GraphScanState &state, const vector_id_t entrypoint, const double entrypointDist,
                                             BinaryHeap<NodeDistFarther> &results, BitVectorVisitedTable *visited,
                                             const int efSearch, VectorSearchStats &stats) {
@@ -867,7 +867,7 @@ namespace kuzu {
 
             template<typename T>
             void oneHopFilteredSearch(const table_id_t tableId, Graph *graph,
-                                        NodeTableDistanceComputer<T> *dc, NodeOffsetLevelSemiMask *filterMask,
+                                        TableDistanceComputer<T> *dc, NodeOffsetLevelSemiMask *filterMask,
                                         GraphScanState &state, const vector_id_t entrypoint, const double entrypointDist,
                                         BinaryHeap<NodeDistFarther> &results, BitVectorVisitedTable *visited,
                                         const int efSearch, const int numFilteredNodesToAdd, VectorSearchStats &stats) {
@@ -913,7 +913,7 @@ namespace kuzu {
 
             template<typename T>
             void blindFilteredSearch(const table_id_t tableId, Graph *graph,
-                                     NodeTableDistanceComputer<T> *dc, NodeOffsetLevelSemiMask *filterMask,
+                                     TableDistanceComputer<T> *dc, NodeOffsetLevelSemiMask *filterMask,
                                      GraphScanState &state, const vector_id_t entrypoint, const double entrypointDist,
                                      BinaryHeap<NodeDistFarther> &results, BitVectorVisitedTable *visited,
                                      const int efSearch, const int numFilteredNodesToAdd, VectorSearchStats &stats) {
@@ -959,7 +959,7 @@ namespace kuzu {
 
             template<typename T>
             void randomFilteredSearch(const table_id_t tableId, Graph *graph,
-                                     NodeTableDistanceComputer<T> *dc, NodeOffsetLevelSemiMask *filterMask,
+                                     TableDistanceComputer<T> *dc, NodeOffsetLevelSemiMask *filterMask,
                                      GraphScanState &state, const vector_id_t entrypoint, const double entrypointDist,
                                      BinaryHeap<NodeDistFarther> &results, BitVectorVisitedTable *visited,
                                      const int efSearch, const int numFilteredNodesToAdd, VectorSearchStats &stats) {
@@ -1005,7 +1005,7 @@ namespace kuzu {
 
             template<typename T>
             void directedFilteredSearch(const table_id_t tableId, Graph *graph,
-                                     NodeTableDistanceComputer<T> *dc, NodeOffsetLevelSemiMask *filterMask,
+                                     TableDistanceComputer<T> *dc, NodeOffsetLevelSemiMask *filterMask,
                                      GraphScanState &state, const vector_id_t entrypoint, const double entrypointDist,
                                      BinaryHeap<NodeDistFarther> &results, BitVectorVisitedTable *visited,
                                      const int efSearch, const int numFilteredNodesToAdd, VectorSearchStats &stats) {
@@ -1054,7 +1054,7 @@ namespace kuzu {
 
             template<typename T>
             void adaptiveGlobalFilteredSearch(const float selectivity, const table_id_t tableId, Graph *graph,
-                                     NodeTableDistanceComputer<T> *dc, NodeOffsetLevelSemiMask *filterMask,
+                                     TableDistanceComputer<T> *dc, NodeOffsetLevelSemiMask *filterMask,
                                      GraphScanState &state, const vector_id_t entrypoint, const double entrypointDist,
                                      BinaryHeap<NodeDistFarther> &results, BitVectorVisitedTable *visited,
                                      const int efSearch, const int numFilteredNodesToAdd, VectorSearchStats &stats) {
@@ -1118,7 +1118,7 @@ namespace kuzu {
 
             template<typename T>
             void navixFilteredSearch(const table_id_t tableId, Graph *graph,
-                                NodeTableDistanceComputer<T> *dc, NodeOffsetLevelSemiMask *filterMask,
+                                TableDistanceComputer<T> *dc, NodeOffsetLevelSemiMask *filterMask,
                                 GraphScanState &state, const vector_id_t entrypoint, const double entrypointDist,
                                 BinaryHeap<NodeDistFarther> &results, BitVectorVisitedTable *visited,
                                 const int efSearch, const int numFilteredNodesToAdd, VectorSearchStats &stats) {
@@ -1194,7 +1194,7 @@ namespace kuzu {
 
             template<typename T>
             void search(SearchType searchType, VectorIndexHeaderPerPartition* header, const table_id_t nodeTableId, Graph *graph,
-                        NodeTableDistanceComputer<T> *dc, NodeOffsetLevelSemiMask *filterMask, GraphScanState &state,
+                        TableDistanceComputer<T> *dc, NodeOffsetLevelSemiMask *filterMask, GraphScanState &state,
                         BinaryHeap<NodeDistFarther> &results, BitVectorVisitedTable *visited, const int efSearch,
                         const int maxK, VectorSearchStats &stats) {
                 // Find closest entrypoint using the above layer!!
@@ -1247,7 +1247,7 @@ namespace kuzu {
             }
 
             template<typename T>
-            inline void knnFilteredSearch(NodeTableDistanceComputer<T>* dc, NodeOffsetLevelSemiMask *filterMask,
+            inline void knnFilteredSearch(TableDistanceComputer<T>* dc, NodeOffsetLevelSemiMask *filterMask,
                                           BinaryHeap<NodeDistFarther> &results, int k, VectorSearchStats &stats) {
                 vector_array_t vectorArray;
                 int size = 0;
@@ -1290,7 +1290,7 @@ namespace kuzu {
             }
 
             template<typename T>
-            inline void knnSearch(NodeTableDistanceComputer<T>* dc, offset_t maxOffset,
+            inline void knnSearch(TableDistanceComputer<T>* dc, offset_t maxOffset,
                                   BinaryHeap<NodeDistFarther> &results, int k, VectorSearchStats &stats) {
                 vector_array_t vectorArray;
                 int size = 0;
