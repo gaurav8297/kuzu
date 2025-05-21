@@ -334,7 +334,6 @@ struct NodeTableDistanceComputer {
     inline void computeDistance(vector_id_t id, double* result) {
 //        auto embedding = getEmbedding(id + startOffset, embeddingVector1.get());
 //        delegate->computeDistance(embedding, dist);
-        printf("meh yea");
         computeZeroCopyDistance(id + startOffset, delegate.get(), result);
     }
 
@@ -347,7 +346,6 @@ struct NodeTableDistanceComputer {
 
     inline void batchComputeDistance(const vector_id_t* vecIds, const int numIds, double* results) {
         KU_ASSERT(numIds <= common::FAST_LOOKUP_MAX_BATCH_SIZE && numIds >= 4);
-        printf("meh yea batch");
         batchComputeZeroCopyDistance(vecIds, numIds, delegate.get(), results);
     }
 
@@ -467,7 +465,6 @@ struct FastQnNodeTableDistanceComputer : NodeTableDistanceComputer<uint8_t> {
           quantizedVectors(quantizedVectors), codeSize(codeSize) {}
 
     inline void computeDistance(vector_id_t id, double* result) {
-        printf("hell yea");
         auto vec = quantizedVectors + id * codeSize;
         delegate->computeDistance(vec, result);
     }
@@ -480,7 +477,6 @@ struct FastQnNodeTableDistanceComputer : NodeTableDistanceComputer<uint8_t> {
 
     inline void batchComputeDistance(const vector_id_t* vecIds, const int numIds, double* results) {
         KU_ASSERT(numIds <= common::FAST_LOOKUP_MAX_BATCH_SIZE && numIds >= 4);
-        printf("hell yea batch");
         for (int i = 0; i < numIds; i++) {
             computeDistance(vecIds[i], results + i);
         }
