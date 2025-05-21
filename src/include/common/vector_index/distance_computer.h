@@ -507,7 +507,7 @@ private:
     const int codeSize;
 };
 
-static inline std::unique_ptr<TableDistanceComputer<float>> createDistanceComputer(
+static inline std::unique_ptr<NodeTableDistanceComputer<float>> createDistanceComputer(
         main::ClientContext *context, table_id_t nodeTableId, property_id_t embeddingPropertyId, offset_t startOffset,
         int dim, DistanceFunc distanceType) {
     std::unique_ptr<DistanceComputer<float>> delegate;
