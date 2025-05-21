@@ -553,11 +553,11 @@ static inline std::unique_ptr<TableDistanceComputer<uint8_t>> createQuantizedDis
         }
     }
     printf("code size: %lu\n", quantizer->codeSize);
-
-    return std::make_unique<NodeTableDistanceComputer<uint8_t>>(context, nodeTableId, quantizedEmbeddingPropertyId,
-                                                                startOffset,
-                                                                std::move(delegate));
-    // return std::make_unique<FastQnNodeTableDistanceComputer>(quantizedVectors, quantizer->codeSize, std::move(delegate));
+    //
+    // return std::make_unique<NodeTableDistanceComputer<uint8_t>>(context, nodeTableId, quantizedEmbeddingPropertyId,
+    //                                                             startOffset,
+    //                                                             std::move(delegate));
+    return std::make_unique<FastQnNodeTableDistanceComputer>(quantizedVectors, quantizer->codeSize, std::move(delegate));
 }
 
 } // namespace common
