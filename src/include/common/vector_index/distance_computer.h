@@ -465,6 +465,7 @@ struct FastQnNodeTableDistanceComputer : NodeTableDistanceComputer<uint8_t> {
           quantizedVectors(quantizedVectors), codeSize(codeSize) {}
 
     inline void computeDistance(vector_id_t id, double* result) {
+        printf("hell yea");
         auto vec = quantizedVectors + id * codeSize;
         delegate->computeDistance(vec, result);
     }
