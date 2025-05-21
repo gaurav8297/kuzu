@@ -111,7 +111,7 @@ namespace kuzu {
                                                             indexHeader->getDim(),
                                                             indexHeader->getConfig().distanceFunc,
                                                             partitionHeader->getQuantizer(),
-                                                            true);
+                                                            false);
             }
 
             void materialize(std::priority_queue<NodeDistFarther> &results, FactorizedTable &table, int k) const {
