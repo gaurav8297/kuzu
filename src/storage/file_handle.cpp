@@ -34,7 +34,7 @@ void FileHandle::constructExistingFileHandle(const std::string& path, VirtualFil
             printf("open with O_DIRECT\n");
             openFlags |= O_DIRECT;
         }
-=#endif
+#endif
     }
     printf("Path: %s\n", path.c_str());
     fileInfo = vfs->openFile(path, openFlags, context);
