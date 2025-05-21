@@ -302,7 +302,7 @@ struct TableDistanceComputer {
 public:
     std::unique_ptr<DistanceComputer<T>> delegate;
 
-    explicit TableDistanceComputer(std::unique_ptr<DistanceComputer<T>> delegate) : delegate(delegate) {}
+    explicit TableDistanceComputer(std::unique_ptr<DistanceComputer<T>> delegate) : delegate(std::move(delegate)) {}
 
     virtual void computeDistance(vector_id_t id, double* result) = 0;
 
