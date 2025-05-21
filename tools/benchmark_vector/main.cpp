@@ -144,17 +144,28 @@ int main(int argc, char **argv) {
     InputParser input(argc, argv);
     std::string databasePath = input.getCmdOption("-databasePath");
     std::string queryPath = input.getCmdOption("-queriesPath");
+    std::string warmupQueriesPath = input.getCmdOption("-warmupQueriesPath");
     std::string gtPath = input.getCmdOption("-gtPath");
+    std::string bufferManagerSizeStr = input.getCmdOption("-bufferManagerSize");
     int warmupTimes = std::stoi(input.getCmdOption("-warmup"));
     int nQueries = std::stoi(input.getCmdOption("-nQueries"));
     int k = std::stoi(input.getCmdOption("-k"));
     int efSearch = 0;  // Will be set either from command-line or via binary search.
     bool binarySearchMode = false;
+    auto bufferManagerSize = 0;
 
     // Check if binary search mode parameters are provided.
     // (Both -minRecall and -maxRecall must be provided to trigger binary search.)
     std::string minRecallStr = input.getCmdOption("-minRecall");
     std::string maxRecallStr = input.getCmdOption("-maxRecall");
+
+    if (warmupQueriesPath.empty()) {
+        warmupQueriesPath = queryPath;
+    }
+
+    if (!bufferManagerSizeStr.empty()) {
+        bufferManagerSize = std::stoi(bufferManagerSizeStr);
+    }
 
     if (!minRecallStr.empty() && !maxRecallStr.empty()) {
         binarySearchMode = true;
@@ -184,6 +195,7 @@ int main(int argc, char **argv) {
 
     auto systemConfig = SystemConfig();
     // systemConfig.readOnly = true;
+    systemConfig.bufferPoolSize = bufferManagerSize * 1024 * 1024 * 1024;  // Convert GB to bytes
     auto db = Database(databasePath, systemConfig);
     auto conn = Connection(&db);
     printf("# Max num threads: %d\n", maxNumThreads);
@@ -275,6 +287,7 @@ int main(int argc, char **argv) {
     for (auto &queriesPath : testQueries) {
         printf("Running queries from: %s\n", queriesPath.c_str());
         auto queries = readQueriesFromFile(queriesPath, efSearch, maxK, useQ, useKnn, searchTypeStr);
+        auto warmupQueries = readQueriesFromFile(warmupQueriesPath, efSearch, maxK, useQ, useKnn, searchTypeStr);
         int queryNumVectors = queries.size();
         if (nQueries < queryNumVectors) {
             queryNumVectors = nQueries;
@@ -287,8 +300,8 @@ int main(int argc, char **argv) {
         for (int i = 0; i < warmupTimes; i++) {
             printf("Warmup started %d\n", i);
             auto start = std::chrono::high_resolution_clock::now();
-            for (int j = 0; j < queryNumVectors; j++) {
-                conn.query(queries[j]);
+            for (int j = 0; j < warmupQueries.size(); j++) {
+                conn.query(warmupQueries[j]);
             }
             auto end = std::chrono::high_resolution_clock::now();
             auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
