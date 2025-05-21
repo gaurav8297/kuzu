@@ -182,7 +182,9 @@ int main(int argc, char **argv) {
         outputFile = outputDir + "/output_" + selectivityStr + "_" + searchTypeStr + ".json";
     }
 
-    auto db = Database(databasePath);
+    auto systemConfig = SystemConfig();
+    systemConfig.readOnly = true;
+    auto db = Database(databasePath, systemConfig);
     auto conn = Connection(&db);
     printf("# Max num threads: %d\n", maxNumThreads);
     conn.setMaxNumThreadForExec(maxNumThreads);
