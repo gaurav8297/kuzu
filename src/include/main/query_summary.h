@@ -24,16 +24,22 @@ struct VectorSearchSummary {
     uint64_t twoHopCalls = 0;
     uint64_t dynamicTwoHopCalls = 0;
     uint64_t candidateNodesExplored = 0;
+    uint64_t totalPins = 0;
+    uint64_t pinsDuration = 0;
+    uint64_t totalReads = 0;
+    uint64_t readsDuration = 0;
 
     explicit VectorSearchSummary() = default;
 
     explicit VectorSearchSummary(double vectorSearchTime_, uint64_t distanceComputations_, double distanceComputationsTime_,
                                  uint64_t listNbrsCalls_, double listNbrsCallsTime_, uint64_t oneHopCalls_, uint64_t twoHopCalls_,
-                                 uint64_t dynamicTwoHopCalls_, uint64_t candidateNodesExplored_)
+                                 uint64_t dynamicTwoHopCalls_, uint64_t candidateNodesExplored_, uint64_t totalPins_,
+                                    uint64_t pinsDuration_, uint64_t totalReads_, uint64_t readsDuration_)
         : vectorSearchTime{vectorSearchTime_}, distanceComputations{distanceComputations_},
           distanceComputationsTime{distanceComputationsTime_}, listNbrsCalls{listNbrsCalls_}, listNbrsCallsTime{listNbrsCallsTime_},
           oneHopCalls{oneHopCalls_}, twoHopCalls{twoHopCalls_}, dynamicTwoHopCalls{dynamicTwoHopCalls_},
-          candidateNodesExplored{candidateNodesExplored_} {}
+          candidateNodesExplored{candidateNodesExplored_}, totalPins{totalPins_}, pinsDuration{pinsDuration_},
+    totalReads{totalReads_}, readsDuration{readsDuration_} {}
 };
 
 /**

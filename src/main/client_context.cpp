@@ -527,7 +527,11 @@ std::unique_ptr<QueryResult> ClientContext::executeAndAutoCommitIfNecessaryNoLoc
             profiler->sumAllNumericMetricsWithKey("oneHopCalls"),
             profiler->sumAllNumericMetricsWithKey("twoHopCalls"),
             profiler->sumAllNumericMetricsWithKey("dynamicTwoHopCalls"),
-            profiler->sumAllNumericMetricsWithKey("candidateNodesExplored"));
+            profiler->sumAllNumericMetricsWithKey("candidateNodesExplored"),
+            profiler->sumAllNumericMetricsWithKey("totalPins"),
+            profiler->sumAllNumericMetricsWithKey("pinsDuration"),
+            profiler->sumAllNumericMetricsWithKey("totalReads"),
+            profiler->sumAllNumericMetricsWithKey("readsDuration"));
     queryResult->initResultTableAndIterator(std::move(resultFT),
         preparedStatement->statementResult->getColumns());
     return queryResult;

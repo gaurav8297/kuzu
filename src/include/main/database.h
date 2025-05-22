@@ -121,6 +121,8 @@ public:
 
     const DBConfig& getConfig() const { return dbConfig; }
 
+    storage::BufferManager* getBufferManager() { return bufferManager.get(); }
+
     common::case_insensitive_map_t<std::unique_ptr<storage::StorageExtension>>&
     getStorageExtensions();
 

@@ -178,8 +178,15 @@ struct PageReadReq {
 struct BufferManagerStats {
     uint64_t totalPins = 0;
     uint64_t totalReads = 0;
-    long pinDuration = 0;
-    long readDuration = 0;
+    long pinDurationNano = 0;
+    long readDurationNano = 0;
+
+    void reset() {
+        totalPins = 0;
+        totalReads = 0;
+        pinDurationNano = 0;
+        readDurationNano = 0;
+    }
 };
 
 class BufferManager {
@@ -260,6 +267,9 @@ private:
 
     uint64_t evictPages();
 
+public:
+    BufferManagerStats stats;
+
 private:
     std::atomic<uint64_t> bufferPoolSize;
     EvictionQueue evictionQueue;
@@ -270,7 +280,6 @@ private:
     std::vector<std::unique_ptr<BMFileHandle>> fileHandles;
 
     std::chrono::nanoseconds pinDuration = std::chrono::nanoseconds::zero();
-    BufferManagerStats stats;
 };
 
 } // namespace storage

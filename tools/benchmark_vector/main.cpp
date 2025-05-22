@@ -190,7 +190,7 @@ int main(int argc, char **argv) {
 
     std::string outputFile = "";
     if (!outputDir.empty()) {
-        outputFile = outputDir + "/output_" + selectivityStr + "_" + searchTypeStr + ".json";
+        outputFile = outputDir + "/output_" + selectivityStr + "_" + std::to_string(efSearch) + "_" + searchTypeStr + ".json";
     }
 
     auto systemConfig = SystemConfig();
@@ -284,6 +284,10 @@ int main(int argc, char **argv) {
     long twoHopCalls = 0;
     long dynamicTwoHopCalls = 0;
     double candidateNodesExplored = 0;
+    long totalPins = 0;
+    long pinsDuration = 0;
+    long totalReads = 0;
+    long readsDuration = 0;
 
     for (auto &queriesPath : testQueries) {
         printf("Running queries from: %s\n", queriesPath.c_str());
@@ -331,6 +335,10 @@ int main(int argc, char **argv) {
             twoHopCalls += vectorStats.twoHopCalls;
             dynamicTwoHopCalls += vectorStats.dynamicTwoHopCalls;
             candidateNodesExplored += vectorStats.candidateNodesExplored;
+            totalPins += vectorStats.totalPins;
+            pinsDuration += vectorStats.pinsDuration;
+            totalReads += vectorStats.totalReads;
+            readsDuration += vectorStats.readsDuration;
             if (res->getNumTuples() < k) {
                 totalQueriesSkipped++;
                 printf("Skipped query %d\n", i);
@@ -368,6 +376,11 @@ int main(int argc, char **argv) {
     double avgDynamicTwoHopCalls = totalQueries > 0 ? (double) dynamicTwoHopCalls / totalQueries : 0;
     double avgCandidateNodesExplored = totalQueries > 0 ? (double) candidateNodesExplored / totalQueries : 0;
     double recallPercentage = (double) recallCount / (totalQueries * k) * 100.0;
+    double avgPins = (double) totalPins / totalQueries;
+    double avgPinsDuration = ((double) pinsDuration / totalQueries) / (1000 * 1000); // Convert to ms
+    double avgReads = (double) totalReads / totalQueries;
+    double avgReadsDuration = ((double) readsDuration / totalQueries) / (1000 * 1000); // Convert to ms
+
 
     // Build JSON output for benchmark summary.
     std::ostringstream jsonStream;
@@ -384,6 +397,10 @@ int main(int argc, char **argv) {
     jsonStream << "  \"avg_two_hop_calls\": " << avgTwoHopCalls << ",\n";
     jsonStream << "  \"avg_dynamic_two_hop_calls\": " << avgDynamicTwoHopCalls << ",\n";
     jsonStream << "  \"avg_candidate_nodes_explored\": " << avgCandidateNodesExplored << ",\n";
+    jsonStream << "  \"avg_pins\": " << avgPins << ",\n";
+    jsonStream << "  \"avg_pins_duration_ms\": " << avgPinsDuration << ",\n";
+    jsonStream << "  \"avg_reads\": " << avgReads << ",\n";
+    jsonStream << "  \"avg_reads_duration_ms\": " << avgReadsDuration << ",\n";
     jsonStream << "  \"total_queries_skipped\": " << totalQueriesSkipped << ",\n";
     jsonStream << "  \"recall_percentage\": " << recallPercentage << ",\n";
     jsonStream << "  \"selectivity\": " << stoi(selectivityStr) << ",\n";

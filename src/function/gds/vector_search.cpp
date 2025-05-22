@@ -155,6 +155,10 @@ namespace kuzu {
             NumericMetric* twoHopCalls;
             NumericMetric* dynamicTwoHopCalls;
             NumericMetric* candidateNodesExplored;
+            NumericMetric* totalPins;
+            NumericMetric* pinsDuration;
+            NumericMetric* totalReads;
+            NumericMetric* readsDuration;
 
             explicit VectorSearchStats(ExecutionContext *context) {
                 vectorSearchTimeMetric = context->profiler->registerTimeMetricForce("vectorSearchTime");
@@ -166,6 +170,10 @@ namespace kuzu {
                 twoHopCalls = context->profiler->registerNumericMetricForce("twoHopCalls");
                 dynamicTwoHopCalls = context->profiler->registerNumericMetricForce("dynamicTwoHopCalls");
                 candidateNodesExplored = context->profiler->registerNumericMetricForce("candidateNodesExplored");
+                totalPins = context->profiler->registerNumericMetricForce("totalPins");
+                pinsDuration = context->profiler->registerNumericMetricForce("pinsDuration");
+                totalReads = context->profiler->registerNumericMetricForce("totalReads");
+                readsDuration = context->profiler->registerNumericMetricForce("readsDuration");
             }
         };
 
@@ -1344,6 +1352,8 @@ namespace kuzu {
                 auto visited = std::make_unique<BitVectorVisitedTable>(header->getNumVectors());
                 auto filterMask = sharedState->inputNodeOffsetMasks.at(indexHeader->getNodeTableId()).get();
                 auto searchType = bindState->searchType;
+                auto bm = context->clientContext->getDatabase()->getBufferManager();
+                bm->stats.reset();
 
                 // Profiling
                 VectorSearchStats stats(context);
@@ -1383,6 +1393,10 @@ namespace kuzu {
                 }
                 searchLocalState->materialize(reversed, *sharedState->fTable, k);
                 stats.vectorSearchTimeMetric->stop();
+                stats.totalPins->increase(bm->stats.totalPins);
+                stats.pinsDuration->increase(bm->stats.pinDurationNano);
+                stats.totalReads->increase(bm->stats.totalReads);
+                stats.readsDuration->increase(bm->stats.readDurationNano);
             }
 
             std::unique_ptr<GDSAlgorithm> copy() const override {
