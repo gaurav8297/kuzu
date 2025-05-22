@@ -1,21 +1,22 @@
 #include <queue>
 
 #include "binder/binder.h"
-#include "common/exception/binder.h"
 #include "binder/expression/expression_util.h"
 #include "binder/expression/literal_expression.h"
+#include "common/exception/binder.h"
+#include "common/task_system/task_scheduler.h"
 #include "common/types/value/nested.h"
+#include "common/vector_index/distance_computer.h"
 #include "common/vector_index/helpers.h"
 #include "function/gds/gds.h"
 #include "function/gds/gds_function_collection.h"
 #include "function/gds_function.h"
 #include "graph/graph.h"
 #include "main/client_context.h"
+#include "main/database.h"
 #include "processor/operator/gds_call.h"
 #include "processor/result/factorized_table.h"
 #include "storage/index/vector_index_header.h"
-#include "common/vector_index/distance_computer.h"
-#include "common/task_system/task_scheduler.h"
 
 using namespace kuzu::processor;
 using namespace kuzu::common;
@@ -1372,12 +1373,8 @@ namespace kuzu {
                     if (useQuantizedVectors) {
                         search(searchType, header, nodeTableId, graph, qdc, filterMask, *state.get(), results, visited.get(),
                                efSearch, numFilteredNodesToAdd, stats);
-                        auto start = std::chrono::high_resolution_clock::now();
                         // reverseAndRerankResults(results, reversed, dc, stats);
                         reverseResults(results, reversed, dc);
-                        auto end = std::chrono::high_resolution_clock::now();
-                        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-                        printf("Reranking time: %ld us\n", duration.count());
                     } else {
                         search(searchType, header, nodeTableId, graph, dc, filterMask, *state.get(), results, visited.get(),
                                efSearch, numFilteredNodesToAdd, stats);

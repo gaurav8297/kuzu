@@ -552,7 +552,6 @@ static inline std::unique_ptr<TableDistanceComputer<uint8_t>> createQuantizedDis
                                                    quantizer->getAlphaSqr());
         }
     }
-    printf("code size: %lu\n", quantizer->codeSize);
     //
     // return std::make_unique<NodeTableDistanceComputer<uint8_t>>(context, nodeTableId, quantizedEmbeddingPropertyId,
     //                                                             startOffset,

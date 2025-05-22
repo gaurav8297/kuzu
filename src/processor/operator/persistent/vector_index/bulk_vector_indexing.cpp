@@ -107,14 +107,12 @@ namespace kuzu {
                         ListVector::getDataVector(localState->embeddingVector)->getData());
                 startVectorId = localState->offsetVector->getValue<internalID_t>(0).offset -
                                 sharedState->startOffsetNodeTable;
-                // print some vector
-                localState->quantizer->encode(vectors, startVectorId, numVectors);
-
                 // Also store the quantized vectors in the header
                 auto quantizedVectors =
                     sharedState->headerPerPartition->getQuantizedVectors() +
                     startVectorId * sharedState->headerPerPartition->getQuantizer()->codeSize;
-                sharedState->headerPerPartition->getQuantizer()->encode(vectors, quantizedVectors, numVectors);
+                // print some vector
+                localState->quantizer->encode(vectors, startVectorId, numVectors, quantizedVectors);
             }
             printf("Finished quantization %d!!\n", sharedState->partitionId);
         }

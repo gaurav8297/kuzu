@@ -194,10 +194,9 @@ int main(int argc, char **argv) {
     }
 
     auto systemConfig = SystemConfig();
-    // systemConfig.readOnly = true;
-    printf("# Buffer manager size: %d GB\n", bufferManagerSize);
+    systemConfig.readOnly = true;
     systemConfig.bufferPoolSize = ((uint64_t)bufferManagerSize) * 1024 * 1024;  // Convert GB to bytes
-    printf("# Buffer pool size: %lu\n", systemConfig.bufferPoolSize);
+    printf("# Buffer pool size: %lu MB\n", systemConfig.bufferPoolSize / (1024 * 1024));
     auto db = Database(databasePath, systemConfig);
     auto conn = Connection(&db);
     printf("# Max num threads: %d\n", maxNumThreads);

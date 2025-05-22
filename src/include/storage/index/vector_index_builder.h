@@ -219,10 +219,10 @@ public:
 
     inline void finalizeTrain() { sq->finalizeTrain(); }
 
-    inline void encode(const float *data, vector_id_t startVectorId, size_t n) {
+    inline void encode(const float *data, vector_id_t startVectorId, size_t n, uint8_t* headerCodes) {
         auto [nodeGroup, offsetInGroup] = StorageUtils::getNodeGroupIdxAndOffsetInChunk(startVectorId);
         auto compressedData = compressedStorage->getData(nodeGroup, offsetInGroup);
-        encode(data, compressedData, n);
+        encode(data, compressedData, n, headerCodes);
     }
 
     ~Quantizer() {
@@ -238,13 +238,15 @@ private:
         }
     }
 
-    inline void encode(const float *data, uint8_t *codes, size_t n) {
+    inline void encode(const float *data, uint8_t *codes, size_t n, uint8_t* headerCodes) {
         KU_ASSERT(n <= batchSize);
         if (distFunc == DistanceFunc::COSINE) {
             normalizeVectors(data, n);
             sq->encode(normVectorsCache, codes, n);
+            sq->encode(normVectorsCache, headerCodes, n);
         } else {
             sq->encode(data, codes, n);
+            sq->encode(data, headerCodes, n);
         }
     }
 
