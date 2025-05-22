@@ -111,8 +111,8 @@ void BufferManager::verifySizeParams(uint64_t bufferPoolSize, uint64_t maxDBSize
 // both get access to the same piece of memory.
 uint8_t* BufferManager::pin(BMFileHandle& fileHandle, page_idx_t pageIdx,
     PageReadPolicy pageReadPolicy) {
-    // stats.totalPins++;
-    // auto start = std::chrono::high_resolution_clock::now();
+    stats.totalPins++;
+    auto start = std::chrono::high_resolution_clock::now();
     auto pageState = fileHandle.getPageState(pageIdx);
     while (true) {
         auto currStateAndVersion = pageState->getStateAndVersion();
@@ -128,16 +128,16 @@ uint8_t* BufferManager::pin(BMFileHandle& fileHandle, page_idx_t pageIdx,
                         "Eviction queue is full! This should be impossible.");
                 }
                 auto frame = getFrame(fileHandle, pageIdx);
-                // auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - start);
-                // stats.pinDurationNano += duration.count();
+                auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - start);
+                stats.pinDurationNano += duration.count();
                return frame;
             }
         } break;
         case PageState::UNLOCKED:
         case PageState::MARKED: {
             if (pageState->tryLock(currStateAndVersion)) {
-                // auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - start);
-                // stats.pinDurationNano += duration.count();
+                auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - start);
+                stats.pinDurationNano += duration.count();
                 return getFrame(fileHandle, pageIdx);
             }
         } break;
@@ -469,14 +469,14 @@ void BufferManager::cachePageIntoFrame(BMFileHandle& fileHandle, page_idx_t page
     auto pageState = fileHandle.getPageState(pageIdx);
     pageState->clearDirty();
     if (pageReadPolicy == PageReadPolicy::READ_PAGE) {
-        // stats.totalReads++;
-        // auto start = std::chrono::high_resolution_clock::now();
+        stats.totalReads++;
+        auto start = std::chrono::high_resolution_clock::now();
         // TODO(gaurav): Maybe batch pin pages to reduce the number of blocking sys calls.
         fileHandle.getFileInfo()->readFromFile((void*)getFrame(fileHandle, pageIdx),
             fileHandle.getPageSize(), pageIdx * fileHandle.getPageSize());
-        // stats.readDurationNano += std::chrono::duration_cast<std::chrono::nanoseconds>(
-        //         std::chrono::high_resolution_clock::now() - start)
-        //         .count();
+        stats.readDurationNano += std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::high_resolution_clock::now() - start)
+                .count();
     }
 }
 
