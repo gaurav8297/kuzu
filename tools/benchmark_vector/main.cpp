@@ -145,6 +145,7 @@ int main(int argc, char **argv) {
     std::string databasePath = input.getCmdOption("-databasePath");
     std::string queryPath = input.getCmdOption("-queriesPath");
     std::string warmupQueriesPath = input.getCmdOption("-warmupQueriesPath");
+    std::string numWarmUpQueriesStr = input.getCmdOption("-numWarmUpQueries");
     std::string gtPath = input.getCmdOption("-gtPath");
     std::string bufferManagerSizeStr = input.getCmdOption("-bufferManagerSize");
     int warmupTimes = std::stoi(input.getCmdOption("-warmup"));
@@ -161,6 +162,11 @@ int main(int argc, char **argv) {
 
     if (warmupQueriesPath.empty()) {
         warmupQueriesPath = queryPath;
+    }
+
+    int numWarmupQueries = 0;
+    if (!numWarmUpQueriesStr.empty()) {
+        numWarmupQueries = std::stoi(numWarmUpQueriesStr);
     }
 
     if (!bufferManagerSizeStr.empty()) {
@@ -302,12 +308,15 @@ int main(int argc, char **argv) {
 
         vector_id_t *gtVecs = new vector_id_t[queryNumVectors * k];
         loadFromFile(gtPath, reinterpret_cast<uint8_t *>(gtVecs), queryNumVectors * k * sizeof(vector_id_t));
-
+        auto totalWarmupQueries = warmupQueries.size();
+        if (numWarmupQueries > 0 && numWarmupQueries < totalWarmupQueries) {
+            totalWarmupQueries = numWarmupQueries;
+        }
         // Warmup phase.
         for (int i = 0; i < warmupTimes; i++) {
             printf("Warmup started %d\n", i);
             auto start = std::chrono::high_resolution_clock::now();
-            for (int j = 0; j < warmupQueries.size(); j++) {
+            for (int j = 0; j < totalWarmupQueries; j++) {
                 conn.query(warmupQueries[j]);
             }
             auto end = std::chrono::high_resolution_clock::now();
