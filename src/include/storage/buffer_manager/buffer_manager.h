@@ -175,6 +175,13 @@ struct PageReadReq {
  * https://github.com/fabubaker/kuzu/blob/umbra-bm/final_project_report.pdf.
  */
 
+struct BufferManagerStats {
+    uint64_t totalPins = 0;
+    uint64_t totalReads = 0;
+    long pinDuration = 0;
+    long readDuration = 0;
+};
+
 class BufferManager {
     friend class MemoryAllocator;
 
@@ -263,6 +270,7 @@ private:
     std::vector<std::unique_ptr<BMFileHandle>> fileHandles;
 
     std::chrono::nanoseconds pinDuration = std::chrono::nanoseconds::zero();
+    BufferManagerStats stats;
 };
 
 } // namespace storage
