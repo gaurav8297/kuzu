@@ -1391,7 +1391,7 @@ namespace kuzu {
                         reverseResults(results, reversed, dc);
                     }
                 }
-                searchLocalState->materialize(reversed, *sharedState->fTable, efSearch);
+                searchLocalState->materialize(reversed, *sharedState->fTable, k);
                 stats.vectorSearchTimeMetric->stop();
                 stats.totalPins->increase(bm->stats.totalPins);
                 stats.pinsDuration->increase(bm->stats.pinDurationNano);
