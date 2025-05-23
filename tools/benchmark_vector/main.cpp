@@ -78,10 +78,62 @@ std::vector<std::string> readQueriesFromFile(const std::string &filePath, int ef
     return queries;
 }
 
-void loadFromFile(const std::string &path, uint8_t *data, size_t size) {
+
+
+void loadBinFile(const std::string &path, uint8_t *data, size_t size) {
     std::ifstream inputFile(path, std::ios::binary);
     inputFile.read(reinterpret_cast<char *>(data), size);
     inputFile.close();
+}
+
+inline void loadFBinFile(
+    const std::string &filename,
+    vector_id_t       *gtVecs,
+    size_t             queryNumVectors,
+    size_t             k
+) {
+    std::ifstream reader(filename, std::ios::binary);
+    if (!reader.is_open()) {
+        throw std::runtime_error("Could not open GT file: " + filename);
+    }
+
+    // read and verify header
+    int32_t npts_i32, ndims_i32;
+    reader.read(reinterpret_cast<char*>(&npts_i32), sizeof(npts_i32));
+    reader.read(reinterpret_cast<char*>(&ndims_i32), sizeof(ndims_i32));
+    if (npts_i32 < static_cast<int32_t>(queryNumVectors)
+     || ndims_i32 != static_cast<int32_t>(k)) {
+        throw std::runtime_error(
+          "GT header mismatch: file has (" +
+          std::to_string(npts_i32) + "×" +
+          std::to_string(ndims_i32) +
+          "), but caller expects (" +
+          std::to_string(queryNumVectors) + "×" +
+          std::to_string(k) + ")"
+        );
+     }
+
+    size_t total = queryNumVectors * k;
+
+    // read IDs into a temp int32 buffer
+    std::vector<uint32_t> tmpIds(total);
+    reader.read(reinterpret_cast<char*>(tmpIds.data()), total * sizeof(uint32_t));
+
+    // we don’t care about distances—just leave them unread and close
+    reader.close();
+
+    // upcast into your vector_id_t array
+    for (size_t i = 0; i < total; ++i) {
+        gtVecs[i] = static_cast<vector_id_t>(tmpIds[i]);
+    }
+}
+
+void loadQueryFile(const std::string &path, vector_id_t *gtVecs, size_t queryNumVectors, size_t k) {
+    if (path.ends_with("fbin")) {
+        loadFBinFile(path, gtVecs, queryNumVectors, k);
+    } else {
+        loadBinFile(path, reinterpret_cast<uint8_t *>(gtVecs), queryNumVectors * k * sizeof(vector_id_t));
+    }
 }
 
 /*
@@ -106,7 +158,7 @@ double measureRecall(Connection &conn, const std::string &queriesPath, int efSea
         queryNumVectors = nQueries;
     }
     vector_id_t *gtVecs = new vector_id_t[queryNumVectors * k];
-    loadFromFile(gtPath, reinterpret_cast<uint8_t *>(gtVecs), queryNumVectors * k * sizeof(vector_id_t));
+    loadQueryFile(gtPath, gtVecs, queryNumVectors, k);
     int totalRecall = 0;
     int validQueries = 0;
 
@@ -307,7 +359,7 @@ int main(int argc, char **argv) {
         }
 
         vector_id_t *gtVecs = new vector_id_t[queryNumVectors * k];
-        loadFromFile(gtPath, reinterpret_cast<uint8_t *>(gtVecs), queryNumVectors * k * sizeof(vector_id_t));
+        loadQueryFile(gtPath, gtVecs, queryNumVectors, k);
         auto totalWarmupQueries = warmupQueries.size();
         if (numWarmupQueries > 0 && numWarmupQueries < totalWarmupQueries) {
             totalWarmupQueries = numWarmupQueries;
