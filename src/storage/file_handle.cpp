@@ -36,7 +36,7 @@ void FileHandle::constructExistingFileHandle(const std::string& path, VirtualFil
 //         }
 // #endif
     }
-    printf("Path: %s\n", path.c_str());
+    // printf("Path: %s\n", path.c_str());
     fileInfo = vfs->openFile(path, openFlags, context);
     auto fileLength = fileInfo->getFileSize();
     numPages = ceil((double)fileLength / (double)getPageSize());
