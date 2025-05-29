@@ -78,8 +78,6 @@ std::vector<std::string> readQueriesFromFile(const std::string &filePath, int ef
     return queries;
 }
 
-
-
 void loadBinFile(const std::string &path, uint8_t *data, size_t size) {
     std::ifstream inputFile(path, std::ios::binary);
     inputFile.read(reinterpret_cast<char *>(data), size);
@@ -98,7 +96,7 @@ inline void loadFBinFile(
     }
 
     // read and verify header
-    int32_t npts_i32, ndims_i32;
+    int npts_i32, ndims_i32;
     reader.read(reinterpret_cast<char*>(&npts_i32), sizeof(npts_i32));
     reader.read(reinterpret_cast<char*>(&ndims_i32), sizeof(ndims_i32));
     if (npts_i32 < static_cast<int32_t>(queryNumVectors)
@@ -384,7 +382,7 @@ int main(int argc, char **argv) {
             printf("====== Running query %d ======\n", i);
             int localRecall = 0;
             auto res = conn.query(queries[i]);
-            // res = conn.query(queries[i]);  // Second run (if desired)
+            res = conn.query(queries[i]);  // Second run (if desired)
             long duration = res->getQuerySummary()->getExecutionTime();
             executionTime += duration;
             compilationTime += res->getQuerySummary()->getCompilingTime();
