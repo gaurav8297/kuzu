@@ -265,7 +265,7 @@ int main(int argc, char **argv) {
         double minRecall = std::stod(minRecallStr);  // e.g., 95.0 for 95%
         double maxRecall = std::stod(maxRecallStr);
         int lowEf = 100;
-        int highEf = 1000;
+        int highEf = 1500;
         int bestEfSearch = -1;
         double bestRecall = 0.0;
 
