@@ -382,7 +382,7 @@ int main(int argc, char **argv) {
             printf("====== Running query %d ======\n", i);
             int localRecall = 0;
             auto res = conn.query(queries[i]);
-            res = conn.query(queries[i]);  // Second run (if desired)
+            // res = conn.query(queries[i]);  // Second run (if desired)
             long duration = res->getQuerySummary()->getExecutionTime();
             executionTime += duration;
             compilationTime += res->getQuerySummary()->getCompilingTime();
