@@ -7,7 +7,7 @@ A Native Vector Index Design for Graph DBMSs With Robust and Fast Predicate-Agno
 - Zero Copy Fast Distance Computations through the buffer manager.
 - Easy to use as implemented in an embedded database.
 
-Our Paper for more info and benchmarks against STOA baselines: https://cs.uwaterloo.ca/~ssalihog/papers/navix-tr.pdf
+Our Paper for more info and benchmarks against SOTA baselines: https://cs.uwaterloo.ca/~ssalihog/papers/navix-tr.pdf
 
 ## Abstract
 
