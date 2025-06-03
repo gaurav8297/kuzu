@@ -2,13 +2,12 @@
 
 A Native Vector Index Design for Graph DBMSs With Robust and Fast Predicate-Agnostic Search Performance.
 
-- Disk Based HNSW Index backed by Buffer Manager
-- A novel Prefiltering-based predicate agnostic vector search which is fast and robust acorss various selectivities and correlation scenarios.
-- Multi-Threaded Index Building
-- Zero Copy Fast Distance Computations through buffer manager
-- Easy to use as implemented in an embedded database
+- A novel Prefiltering-based predicate agnostic filtered vector search algorithm (adaptive-global) that is fast and robust acorss various selectivities and correlation scenarios. This algorithm works directly on top of HNSW thus making it easily integrable into most existing systems.
+- Disk-Based HNSW Index backed by Buffer Manager.
+- Zero Copy Fast Distance Computations through the buffer manager.
+- Easy to use as implemented in an embedded database.
 
-Our Paper for more info: https://cs.uwaterloo.ca/~ssalihog/papers/navix-tr.pdf
+Our Paper for more info and benchmarks against STOA baselines: https://cs.uwaterloo.ca/~ssalihog/papers/navix-tr.pdf
 
 ## Abstract
 
