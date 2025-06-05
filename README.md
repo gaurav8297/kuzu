@@ -2,12 +2,15 @@
 
 A Native Vector Index Design for Graph DBMSs With Robust and Fast Predicate-Agnostic Search Performance.
 
-- A novel Prefiltering-based predicate agnostic filtered vector search algorithm (adaptive-global) that is fast and robust acorss various selectivities and correlation scenarios. This algorithm works directly on top of HNSW thus making it easily integrable into most existing systems.
+- A novel Prefiltering-based predicate agnostic filtered vector search algorithm (adaptive-local) that is fast and robust acorss various selectivities and correlation scenarios. This algorithm works directly on top of HNSW thus making it easily integrable into most existing systems.
 - Disk-Based HNSW Index backed by Buffer Manager.
 - Zero Copy Fast Distance Computations through the buffer manager.
 - Easy to use as implemented in an embedded database.
 
 Our Paper for more info and benchmarks against SOTA baselines: https://cs.uwaterloo.ca/~ssalihog/papers/navix-tr.pdf
+
+## Faiss Navix
+We have also implemented Navix's adaptive-local algorithm in Faiss HNSW implementation. https://github.com/gaurav8297/faiss-navix
 
 ## Abstract
 
