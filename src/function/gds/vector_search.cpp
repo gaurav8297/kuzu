@@ -235,7 +235,7 @@ namespace kuzu {
                 // auto maxK = ExpressionUtil::getLiteralValue<int64_t>(*params[6]);
                 auto useQuantizedVectors = ExpressionUtil::getLiteralValue<bool>(*params[6]);
                 auto useKnnSearch = ExpressionUtil::getLiteralValue<bool>(*params[7]);
-                auto searchTypeStr = params[9]->toString();
+                auto searchTypeStr = params[8]->toString();
                 // lower case
                 std::transform(searchTypeStr.begin(), searchTypeStr.end(), searchTypeStr.begin(), ::tolower);
 
